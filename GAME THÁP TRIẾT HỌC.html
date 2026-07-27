@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tháp Triết Học - Chinh Phục Đỉnh Cao Tri Thức</title>
+    
+    <!-- Tích hợp thư viện Pháo hoa (Confetti) -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            --bg-overlay: rgba(15, 23, 42, 0.7);
+            --card-bg: rgba(30, 41, 59, 0.85);
+            --accent-gold: #fbbf24;
+            --text-color: #f8fafc;
+            --correct-color: #10b981;
+            --wrong-color: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            /* Hình nền Cây thế giới / Huyền bí */
+            background-image: linear-gradient(var(--bg-overlay), var(--bg-overlay)), url('https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=80&w=2000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 700px;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px 30px;
+            box-shadow: 0 0 30px rgba(251, 191, 36, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            text-align: center;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        h1 {
+            color: var(--accent-gold);
+            font-size: 32px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+        }
+
+        .tower-progress {
+            margin: 25px 0 35px 0;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            height: 14px;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #f59e0b, #10b981);
+            border-radius: 20px;
+            transition: width 0.5s ease-out;
+            position: relative;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.6);
+        }
+
+        .soldier-icon {
+            position: absolute;
+            right: -15px;
+            top: -22px;
+            font-size: 28px;
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
+            transition: all 0.5s ease;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 16px;
+            color: var(--accent-gold);
+            margin-bottom: 20px;
+            border: 1px solid var(--accent-gold);
+        }
+
+        .question-text {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            line-height: 1.6;
+            text-align: left;
+            min-height: 80px;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: rgba(15, 23, 42, 0.8);
+            color: var(--text-color);
+            border: 2px solid #334155;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 16px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .option-btn:hover {
+            background: rgba(51, 65, 85, 0.9);
+            border-color: var(--accent-gold);
+            transform: translateX(5px);
+        }
+
+        .option-btn.correct {
+            background: var(--correct-color) !important;
+            border-color: #047857;
+            color: #fff;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+        }
+
+        .option-btn.wrong {
+            background: var(--wrong-color) !important;
+            border-color: #b91c1c;
+            color: #fff;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .btn-action {
+            background: linear-gradient(45deg, #f59e0b, #d97706);
+            color: #fff;
+            font-weight: bold;
+            font-size: 16px;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-transform: uppercase;
+            box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
+        }
+
+        .btn-action:hover {
+            transform: scale(1.05) translateY(-3px);
+            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.6);
+        }
+
+        .btn-retry-wrong {
+            background: linear-gradient(45deg, #ef4444, #b91c1c);
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .btn-retry-wrong:hover {
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.6);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+        .shake-effect {
+            animation: shake 0.5s ease-in-out;
+            border-color: var(--wrong-color) !important;
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.3) !important;
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="audio-bg" src="nhac-nen.mp3" loop></audio>
+    <audio id="audio-correct" src="dung.mp3"></audio>
+    <audio id="audio-wrong" src="sai.mp3"></audio>
+    <audio id="audio-win" src="chuc-mung.mp3"></audio>
+
+    <div class="game-container" id="main-container">
+        <div id="start-screen" class="start-screen">
+            <h1>🏛️ THÁP TRIẾT HỌC</h1>
+            <p style="font-size: 18px; margin-bottom: 10px;">Chào mừng đến với hành trình chinh phục <b>30 tầng Tháp</b>!</p>
+            <p style="color: #cbd5e1; margin-bottom: 20px;">Vị trí câu hỏi và đáp án sẽ được thay đổi liên tục. Hãy dựa vào tư duy, đừng học vẹt!</p>
+            <button class="btn-action" onclick="startGame()">BẮT ĐẦU CHINH PHỤC</button>
+        </div>
+
+        <div id="quiz-screen" class="hidden">
+            <h1>🏛️ THÁP TRIẾT HỌC</h1>
+            <div class="status-badge" id="floor-indicator">Tầng 1 / 30</div>
+            
+            <div class="tower-progress">
+                <div class="progress-bar" id="progress-bar">
+                    <div class="soldier-icon" id="soldier">🧙‍♂️</div>
+                </div>
+            </div>
+
+            <div class="question-text" id="question-text">Đang tải câu hỏi...</div>
+
+            <div class="options-grid" id="options-container">
+                <!-- Đáp án load ngẫu nhiên -->
+            </div>
+        </div>
+
+        <div id="end-screen" class="end-screen hidden">
+            <h1 id="end-title" style="font-size: 36px; margin-bottom: 20px;">🏆</h1>
+            <p id="end-message" style="font-size: 18px; margin-bottom: 15px;"></p>
+            <div style="font-size: 26px; font-weight: bold; color: var(--correct-color); text-shadow: 0 0 10px rgba(16, 185, 129, 0.5); margin-bottom: 25px;" id="final-score">
+                Số câu đúng: 0/30
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn-action" onclick="restartGame()">LÀM LẠI TỪ ĐẦU</button>
+                <button id="btn-retry-wrong" class="btn-action btn-retry-wrong hidden" onclick="retryWrongQuestions()">LÀM LẠI CÂU SAI</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const originalQuestions = [
+            { q: "Hai \"người khổng lồ\" của Triết học Cổ điển Đức trước năm 1848 là ai và thế giới quan của họ có điểm gì khác biệt?", options: ["Hegel (Duy vật) và Feuerbach (Duy tâm)", "Hegel (Duy tâm) và Feuerbach (Duy vật)", "Kant (Duy tâm) và Hegel (Duy vật)", "Feuerbach (Biện chứng) và Mác (Siêu hình)"], answer: 1 },
+            { q: "Đâu KHÔNG PHẢI là tiền đề kinh tế - xã hội dẫn đến sự ra đời của triết học Mác?", options: ["Sự phát triển mạnh mẽ của phương thức sản xuất tư bản chủ nghĩa tại châu Âu.", "Sự củng cố quyền lực tuyệt đối và sự phồn vinh của chế độ phong kiến tại Anh, Pháp.", "Sự xuất hiện phong trào đấu tranh của thợ dệt ở Lyon (Pháp) và Xilêdi (Đức).", "Sự lớn mạnh của giai cấp vô sản, trở thành lực lượng tiên phong đấu tranh."], answer: 1 },
+            { q: "Triết học Mác được hình thành dựa trên việc kế thừa trực tiếp 3 nguồn gốc lý luận nào sau đây?", options: ["Triết học cổ điển Đức, Kinh tế chính trị học cổ điển Anh, Chủ nghĩa xã hội không tưởng Pháp.", "Triết học Hy Lạp cổ đại, Triết học khai sáng Pháp, Kinh tế chính trị học Mỹ.", "Thuyết tiến hóa, Thuyết tế bào, Định luật bảo toàn năng lượng.", "Phép biện chứng của Feuerbach, Chủ nghĩa duy vật của Hegel."], answer: 0 },
+            { q: "Bài báo nào đăng trên tạp chí Niên giám Pháp - Đức (1844) đã đánh dấu bước chuyển dứt khoát của C. Mác sang lập trường duy vật và chủ nghĩa cộng sản?", options: ["Tuyên ngôn của Đảng Cộng sản.", "Bản thảo kinh tế triết học năm 1844.", "Bài báo vạch rõ giai cấp vô sản là \"vũ khí vật chất\" của triết học.", "Luận cương về Phoi-ơ-bắc."], answer: 2 },
+            { q: "C. Mác đã \"lật ngược\" phép biện chứng của Hegel để xây dựng phép biện chứng duy vật bằng cách nào?", options: ["Phủ nhận hoàn toàn sự tồn tại của mâu thuẫn trong giới tự nhiên.", "Khẳng định \"Ý niệm tuyệt đối\" là nền tảng sinh ra thế giới vật chất.", "Đặt phép biện chứng lên nền tảng vật chất, xem ý thức chỉ là sự phản ánh thế giới hiện thực.", "Khẳng định tư duy con người hoàn toàn độc lập với tự nhiên."], answer: 2 },
+            { q: "Trong \"Luận cương về Phoi-ơ-bắc\", C. Mác đã đưa ra định nghĩa mang tính bước ngoặt nào về bản chất con người?", options: ["Bản chất con người là một thực thể sinh học có chung nhu cầu ăn uống, sinh lý.", "Bản chất con người là sự tha hóa của \"Ý niệm tuyệt đối\".", "Bản chất con người là một cá nhân trừu tượng, cô lập.", "Trong tính hiện thực của nó, bản chất con người là tổng hoà những quan hệ xã hội."], answer: 3 },
+            { q: "Theo chủ nghĩa duy vật lịch sử, mâu thuẫn cốt lõi nào là động lực thúc đẩy lịch sử vận động qua các hình thái kinh tế - xã hội?", options: ["Mâu thuẫn giữa Ý niệm tuyệt đối và Vật chất.", "Mâu thuẫn giữa Lực lượng sản xuất và Quan hệ sản xuất.", "Mâu thuẫn giữa Tự nhiên và Xã hội.", "Mâu thuẫn giữa Tôn giáo và Khoa học."], answer: 1 },
+            { q: "Tác phẩm nào xuất bản năm 1848 được xem là văn kiện cương lĩnh đầu tiên của chủ nghĩa Mác, tuyên bố \"Lịch sử tất cả các xã hội cho đến ngày nay chỉ là lịch sử đấu tranh giai cấp\"?", options: ["Hệ tư tưởng Đức.", "Tư bản.", "Sự khốn cùng của triết học.", "Tuyên ngôn của Đảng Cộng sản."], answer: 3 },
+            { q: "Theo triết học Mác, mệnh đề nào sau đây đúng khi nói về mối quan hệ giữa Trật tự vật chất (Cơ sở hạ tầng) và Kiến trúc thượng tầng?", options: ["Ý tưởng (tôn giáo, đạo đức) quyết định trật tự vật chất của xã hội.", "Tồn tại xã hội quyết định ý thức; luật pháp và tư tưởng phát sinh từ điều kiện vật chất của thời kỳ đó.", "Luật pháp là tiêu chuẩn vĩnh cửu, không phụ thuộc vào ý chí của giai cấp thống trị.", "Ý tưởng là yếu tố quyết định hoàn toàn hướng đi của lịch sử."], answer: 1 },
+            { q: "Việc xuất bản Tập 1 bộ \"Tư bản\" năm 1867 có ý nghĩa to lớn gì đối với lý luận của Mác?", options: ["Cung cấp nền tảng vật chất, vạch trần cơ chế bóc lột qua Quy luật Giá trị thặng dư (m).", "Là tác phẩm đầu tiên trình bày phép biện chứng trong khoa học tự nhiên.", "Xây dựng nền tảng cho hệ thống triết học duy tâm khách quan.", "Đưa ra quan điểm về \"Tôn giáo tình yêu\" để giải phóng giai cấp vô sản."], answer: 0 },
+            { q: "Trong tác phẩm \"Chống Đuy-rinh\", Ph. Ăng-ghen lập luận thế nào về nguồn gốc của các nguyên lý?", options: ["Nguyên lý là điểm xuất phát của sự nghiên cứu, được áp đặt lên giới tự nhiên.", "Nguyên lý được cấu tạo từ tư duy, từ những phạm trù tồn tại vĩnh cửu.", "Nguyên lý không phải là điểm xuất phát mà là kết quả cuối cùng của quá trình nhận thức thế giới khách quan.", "Nguyên lý do thần linh sáng tạo và con người chỉ việc tuân theo."], answer: 2 },
+            { q: "Luận điểm \"Vận động là phương thức tồn tại của vật chất\" của Ăng-ghen nhằm bác bỏ quan niệm sai lầm nào?", options: ["Quan niệm cho rằng không thể có vận động tách khỏi vật chất.", "Quan niệm siêu hình cho rằng thế giới từng ở trong trạng thái bất động nguyên thủy rồi mới cần một \"cái đẩy đầu tiên\".", "Quan niệm cho rằng trạng thái đứng im chỉ là tương đối và tạm thời.", "Quan niệm duy vật nhất quán."], answer: 1 },
+            { q: "Trong phân tích về sự vận động lịch sử, sự sụp đổ của chủ nghĩa tư bản do tích lũy mâu thuẫn là biểu hiện của quy luật nào?", options: ["Quy luật Lượng biến thành Chất.", "Quy luật Giá trị.", "Quy luật Tồn tại xã hội quyết định ý thức.", "Quy luật đào thải tự nhiên của Darwin."], answer: 0 },
+            { q: "Theo quan niệm của Ph. Ăng-ghen, \"Tự do\" được hiểu một cách biện chứng là gì?", options: ["Là hành động tùy tiện, thoát khỏi mọi quy luật khách quan.", "Là sự chi phối dựa trên ý muốn chủ quan của con người.", "Là trạng thái con người vừa mới tách khỏi giới súc vật.", "Là sự nhận thức được tất yếu và hành động phù hợp với những quy luật khách quan ấy."], answer: 3 },
+            { q: "Trong tác phẩm \"Biện chứng của tự nhiên\", Ăng-ghen nhận định thế nào về sự chuyển hóa giữa các hình thức vận động (cơ, lý, hóa, sinh)?", options: ["Các hình thức vận động hoàn toàn tách biệt, không liên hệ với nhau.", "Có thể giản lược hoàn toàn hình thức vận động cao (như sự sống) về hình thức vận động thấp (phản ứng hóa học).", "Mỗi hình thức vận động có đặc điểm riêng, sự chuyển hóa giữa chúng thường gắn với bước nhảy về chất.", "Tự nhiên là một tổng thể tĩnh tại, không có sự chuyển hóa hay phát triển."], answer: 2 },
+            { q: "Trong “biện chứng của tự nhiên “, Ăng-ghen đặc biệt nhấn mạnh yếu tố nào giúp con người tách giới súc vật ?", options: ["Khả năng chiêm nghiệm các ý niệm trừu tượng.", "Sự xuất hiện ngẫu nhiên của các tôn giáo cổ.", "Vai trò quyết định của lao động thực tiễn.", "Sự phát triển tự thân của gen di truyền."], answer: 2 },
+            { q: "Thời kì hình thành tư tưởng triết học Mác với bước quá độ từ chủ nghĩa duy tâm và dân chủ cách mạng sang chủ nghĩa duy vật và chủ nghĩa cộng sản là:", options: ["Thời kì 1841 - 1844.", "Thời kì 1844 - 1848.", "Thời kì 1848 - 1851.", "Thời kì 1851 - 1854."], answer: 0 },
+            { q: "Theo Ăng-ghen trong 'Chống Đuy-rinh', quy luật 'Phủ định của phủ định' thể hiện như thế nào trong sự phát triển của chế độ sở hữu lịch sử?", options: ["Chế độ tư hữu tư bản chủ nghĩa tồn tại vĩnh cữu không thể bị phủ định.", "Chế độ công xã nguyên thuỷ bị phủ định vĩnh viễn và không bao giờ tái lập ở bất kỳ hình thức nào.", "Sự phát triển sở hữu chỉ là chu kỳ lặp lại y nguyên cái cũ không có sự kế thừa.", "Chế độ tư hữu nhỏ bị chủ nghĩa tư bản phủ định, rồi chính chủ nghĩa tư bản lại bị phủ định bởi chế độ sở hữu xã hội cao hơn."], answer: 3 },
+            { q: "Mâu thuẫn cơ bản thúc đẩy sự vận động của xã hội tư bản theo Ph. Ăng-ghen là gì ?", options: ["Xung đột giữa các tôn giáo và hệ tư tưởng cũ.", "Sản xuất xã hội hoá và chiếm hữu tư nhân.", "Sự khác biệt về trình độ văn hoá giữa các quốc gia.", "Sự cạnh tranh giữa các nhà khoa học và triết gia."], answer: 1 },
+            { q: "Sự vận động lịch sử theo quy luật “Phủ định của phủ định” thường có hình thức gì ?", options: ["Đường xoáy ốc tiến lên với sự kế thừa.", "Vòng tròn khép kín lặp lại y nguyên như cái cũ.", "Đường thẳng tắp không bao giờ gặp mâu thuẫn.", "Sự sụp đổ hoàn toàn không để dấu vết gì."], answer: 0 },
+            { q: "Những điều kiện lịch sử của sự ra đời triết học Mác là:", options: ["Nguồn gốc lý luận và tiền đề khoa học tự nhiên", "Điều kiện chính trị-xã hội, nguồn gốc lý luận và tiền đề khoa học tự nhiên", "Nhân tố chủ quan trong sự hình thành triết học Mác", "Điều kiện chính trị-xã hội, nguồn gốc lý luận và tiền đề khoa học tự nhiên, nhân tố chủ quan trong sự hình thành triết học Mác."], answer: 3 },
+            { q: "Theo Feuerbach, nguồn gốc thật sự của Thượng đế và tôn giáo là gì?", options: ["Do một thực thể siêu nhiên tối cao tạo nên từ trước.", "Do con người phóng chiếu những khao khát và phẩm chất tốt đẹp của chính mình ra bên ngoài.", "Do sự áp đặt thuần tuý của giai cấp phong kiến.", "Do sự vận động tự thân của ý niệm tuyệt đối."], answer: 1 },
+            { q: "Trong tác phẩm ‘chống Đuy-rinh’, Ph Ăng-ghen khẳng định tính thống nhất thực sự của thế giới nằm ở đâu ?", options: ["Nằm ở sự tồn tại thuần tuý của các sự vật.", "Nằm ở tính vật chất của thế giới.", "Nằm ở ý chí và nhận thức của con người.", "Nằm ở các khái niệm logic trừu tượng."], answer: 1 },
+            { q: "Trong ‘biện chứng của tự nhiên’, Ph Ăng-ghen rút ra kết luận gì về các hình thức vận động của vật chất ?", options: ["Mọi hình thức vận động đều hoàn toàn biệt lập và không có quan hệ chuyển hoá.", "Vận động cơ học là hình thức vận động duy nhất tồn tại trong tự nhiên.", "Có thể giản lược hoàn toàn các hình thức vận động cao về hình thức vận động thấp.", "Các hình thức vận động có mối liên hệ chuyển hoá nhưng không thể giản lược hoàn toàn cái cao về cái thấp."], answer: 3 },
+            { q: "Ba phát minh lớn của khoa học tự nhiên đầu thế kỷ XIX đóng vai trò tiền đề cho sự ra đời của triết học Mác là những phát minh nào?", options: ["Thuyết tương đối, Thuyết lượng tử, Định luật tuần hoàn Mendeleev.", "Định luật bảo toàn và chuyển hoá năng lượng, Thuyết tế bào, Thuyết tiến hoá của Darwin.", "Định luật bảo toàn năng lượng, Thuyết nguyên tử, Thuyết tiến hoá.", "Thuyết vạn vật hấp dẫn, Thuyết tế bào, Cơ học Newton."], answer: 1 },
+            { q: "Tác phẩm nào của C. Mác (xuất bản tập 1 năm 1867) được coi là sự phát triển đỉnh cao của triết học, lô-gíc học và kinh tế chính trị Mác-xít?", options: ["Hệ tư tưởng Đức.", "Tuyên ngôn của Đảng Cộng sản.", "Gia đình thần thánh.", "Bộ Tư bản."], answer: 3 },
+            { q: "Phát kiến vĩ đại thứ hai của C. Mác trong lĩnh vực kinh tế chính trị được trình bày chi tiết trong bộ 'Tư bản' là gì?", options: ["Thuyết phân công lao động quốc tế.", "Quy luật cạnh tranh tự do.", "Quy luật Giá trị thặng dư.", "Học thuyết về bàn tay ẩn giấu."], answer: 2 },
+            { q: "Trong Luận cương XI về Phoi-ơ-bắc, Mác nêu rõ sự khác biệt căn bản giữa triết học của ông với các triết học trước đó qua luận điểm nào?", options: ["‘Tự do là sự thoát khỏi mọi quy luật vận động của tự nhiên’.", "‘Các nhà triết học chỉ giải thích thế giới bằng nhiều cách khác nhau, song vấn đề là cải tạo thế giới’.", "‘Thế giới tư duy quyết định sự vận động của thế giới vật chất’.", "‘Triết học là khoa học của mọi khoa học’."], answer: 1 },
+            { q: "Định luật bảo toàn và chuyển hóa năng lượng chứng minh điều gì trong phép biện chứng của Ăng-ghen?", options: ["Thế giới hữu hạn về mặt năng lượng và vật chất.", "Vận động không mất đi mà chỉ chuyển hình thức.", "Sự đứng yên là đích đến cuối cùng của mọi năng lượng.", "Năng lượng có thể tạo ra từ hư vô."], answer: 1 },
+            { q: "Phong trào đấu tranh nào của công nhân Anh vào cuối những năm 30 thế kỷ XIX được coi là phong trào quần chúng cách mạng vô sản đầu tiên mang hình thức chính trị rõ rệt?", options: ["Phong trào Hiến chương.", "Phong trào đấu tranh thợ dệt Xilêdi.", "Phong trào Đập phá máy móc (Luddite).", "Cuộc khởi nghĩa thợ dệt Lyon."], answer: 0 }
+        ];
+
+        let gameQuestions = [];
+        let wrongQuestionsPool = [];
+        let currentFloor = 0;
+        let score = 0;
+        let canAnswer = true;
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function playSound(id) {
+            const audio = document.getElementById(id);
+            if (audio) {
+                audio.currentTime = 0;
+                audio.play().catch(e => console.log("Lỗi âm thanh:", id));
+            }
+        }
+
+        function startGame() {
+            playSound("audio-bg");
+            document.getElementById("start-screen").classList.add("hidden");
+            document.getElementById("quiz-screen").classList.remove("hidden");
+
+            gameQuestions = JSON.parse(JSON.stringify(originalQuestions));
+            shuffleArray(gameQuestions);
+            
+            currentFloor = 0;
+            score = 0;
+            wrongQuestionsPool = [];
+            
+            loadQuestion();
+        }
+
+        function retryWrongQuestions() {
+            document.getElementById("end-screen").classList.add("hidden");
+            const winMusic = document.getElementById("audio-win");
+            winMusic.pause();
+            winMusic.currentTime = 0;
+
+            gameQuestions = JSON.parse(JSON.stringify(wrongQuestionsPool));
+            shuffleArray(gameQuestions);
+
+            currentFloor = 0;
+            score = 0;
+            wrongQuestionsPool = [];
+
+            document.getElementById("quiz-screen").classList.remove("hidden");
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            canAnswer = true;
+            const qData = gameQuestions[currentFloor];
+            document.getElementById("floor-indicator").innerText = `Tầng ${currentFloor + 1} / ${gameQuestions.length}`;
+            document.getElementById("progress-bar").style.width = `${((currentFloor) / gameQuestions.length) * 100}%`;
+            document.getElementById("question-text").innerText = `Câu ${currentFloor + 1}: ${qData.q}`;
+
+            const optionsContainer = document.getElementById("options-container");
+            optionsContainer.innerHTML = "";
+            let optionsObj = qData.options.map((text, index) => {
+                return { text: text, isCorrect: (index === qData.answer) };
+            });
+            shuffleArray(optionsObj); 
+
+            const labels = ["A", "B", "C", "D"];
+            optionsObj.forEach((opt, idx) => {
+                const btn = document.createElement("button");
+                btn.className = "option-btn";
+                btn.innerText = `${labels[idx]}. ${opt.text}`;
+                btn.onclick = () => selectOption(opt.isCorrect, btn, optionsObj, qData);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectOption(isCorrect, btnElement, optionsList, currentQData) {
+            if (!canAnswer) return;
+            canAnswer = false;
+            const allButtons = document.querySelectorAll(".option-btn");
+
+            if (isCorrect) {
+                btnElement.classList.add("correct");
+                score++;
+                playSound("audio-correct");
+                document.getElementById("progress-bar").style.width = `${((currentFloor + 1) / gameQuestions.length) * 100}%`;
+            } else {
+                btnElement.classList.add("wrong");
+                playSound("audio-wrong");
+                const container = document.getElementById("main-container");
+                container.classList.add("shake-effect");
+                setTimeout(() => container.classList.remove("shake-effect"), 500);
+                const correctIndex = optionsList.findIndex(o => o.isCorrect === true);
+                allButtons[correctIndex].classList.add("correct");
+
+                wrongQuestionsPool.push(currentQData);
+            }
+
+            setTimeout(() => {
+                currentFloor++;
+                if (currentFloor < gameQuestions.length) {
+                    loadQuestion();
+                } else {
+                    showEndScreen();
+                }
+            }, 1500);
+        }
+
+        function showEndScreen() {
+            document.getElementById("quiz-screen").classList.add("hidden");
+            document.getElementById("end-screen").classList.remove("hidden");
+            document.getElementById("final-score").innerText = `Số câu đúng: ${score} / ${gameQuestions.length}`;
+
+            const btnRetryWrong = document.getElementById("btn-retry-wrong");
+            if (wrongQuestionsPool.length > 0) {
+                btnRetryWrong.classList.remove("hidden");
+            } else {
+                btnRetryWrong.classList.add("hidden");
+            }
+
+            const bgMusic = document.getElementById("audio-bg");
+            bgMusic.pause(); 
+            
+            playSound("audio-win"); 
+
+            var duration = 4 * 1000;
+            var end = Date.now() + duration;
+            (function frame() {
+                confetti({
+                    particleCount: 5,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#fbbf24', '#10b981', '#ef4444']
+                });
+                confetti({
+                    particleCount: 5,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#fbbf24', '#10b981', '#ef4444']
+                });
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+
+            let title = "";
+            let message = "";
+            let percent = score / gameQuestions.length;
+
+            if (percent < 0.4) {
+                title = "🌱 TRIẾT GIA TẬP SỰ";
+                message = "Bạn đã rất cố gắng! Hãy tiếp tục rèn luyện để vươn tới đỉnh cao nhé.";
+            } else if (percent < 0.6) {
+                title = "📖 TRIẾT GIA BẬC TRUNG";
+                message = "Bạn đã nắm được những khái niệm cơ bản. Hành trình phía trước còn rất dài!";
+            } else if (percent < 0.9) {
+                title = "🧙‍♂️ TRIẾT GIA LÃO LÀNG";
+                message = "Kiến thức của bạn rất uyên thâm! Bạn đã gần chạm đến đỉnh cao của tháp tri thức rồi.";
+            } else {
+                title = "🌟 ARE YOU C.MÁC OR LENIN????";
+                message = "Vô tiền khoáng hậu! Bạn chính là một bậc thầy về Triết học Mác - Lênin!";
+            }
+
+            document.getElementById("end-title").innerText = title;
+            document.getElementById("end-message").innerText = message;
+        }
+
+        function restartGame() {
+            document.getElementById("end-screen").classList.add("hidden");
+            const winMusic = document.getElementById("audio-win");
+            winMusic.pause();
+            winMusic.currentTime = 0;
+            startGame();
+        }
+    </script>
+</body>
+</html>
